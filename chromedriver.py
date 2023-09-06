@@ -1,5 +1,4 @@
-pip install faker
-apt install chromium-chromedriver
+
 cp /usr/lib/chromium-browser/chromedriver /usr/bin
 
 import sys
