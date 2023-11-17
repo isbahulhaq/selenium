@@ -1,12 +1,8 @@
 import asyncio
-import threading
 from concurrent.futures import ThreadPoolExecutor
 from playwright.async_api import async_playwright
 import nest_asyncio
 import random
-import getindianname as name
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import indian_names
 
 nest_asyncio.apply()
@@ -14,11 +10,9 @@ nest_asyncio.apply()
 # Flag to indicate whether the script is running
 running = True
 
-async def start(name, user, wait_time, meetingcode, passcode):
-    print(f"{name} started!")
-
-async def start(user, wait_time, meetingcode, passcode):
-    name = indian_names.get_full_name()  # Generate an Indian name using the indian_names library
+async def start(thread_name, wait_time, meetingcode, passcode):
+    user = indian_names.get_full_name()  # Generate an Indian name using the indian_names library
+    print(f"{thread_name} started!")
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, args=['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'])
@@ -51,15 +45,15 @@ async def start(user, wait_time, meetingcode, passcode):
             mic_button_locator = await page.wait_for_selector(query, timeout=350000)
             await asyncio.sleep(10)
             await mic_button_locator.evaluate_handle('node => node.click()')
-            print(f"{name} mic aayenge.")
+            print(f"{thread_name} mic aayenge.")
         except Exception as e:
-            print(f"{name} mic nahe aayenge. ", e)
+            print(f"{thread_name} mic nahe aayenge. ", e)
 
-        print(f"{name} sleep for {wait_time} seconds ...")
+        print(f"{thread_name} sleep for {wait_time} seconds ...")
         while running and wait_time > 0:
             await asyncio.sleep(1)
             wait_time -= 1
-        print(f"{name} ended!")
+        print(f"{thread_name} ended!")
 
         await browser.close()
 
@@ -73,12 +67,7 @@ async def main():
     wait_time = sec * 60
 
     for i in range(number):
-        try:
-            # Generate a random Indian name using getindianname
-            user = name.randname()
-        except IndexError:
-            break
-        await start(f'[Thread{i}]', user, wait_time, meetingcode, passcode)
+        await start(f'[Thread{i}]', wait_time, meetingcode, passcode)
 
 if __name__ == '__main__':
     try:
