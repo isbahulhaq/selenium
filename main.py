@@ -66,8 +66,13 @@ async def main():
     sec = 90
     wait_time = sec * 60
 
+    tasks = []
     for i in range(number):
-        await start(f'[Thread{i}]', wait_time, meetingcode, passcode)
+        # You can replace this with your own logic for generating a random name
+        user = indian_names.get_full_name()
+        task = start(f'[Thread{i}]', wait_time, meetingcode, passcode)
+        tasks.append(task)
+        await asyncio.gather(*tasks)
 
 if __name__ == '__main__':
     try:
