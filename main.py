@@ -10,8 +10,11 @@ nest_asyncio.apply()
 # Flag to indicate whether the script is running
 running = True
 
+# Event to signal when the microphone button is pressed
+microphone_pressed = asyncio.Event()
+
 async def start(thread_name, wait_time, meetingcode, passcode):
-    user = indian_names.get_full_name()  # Generate an Indian name using the indian_names library
+    user = indian_names.get_full_name()
     print(f"{thread_name} started!")
 
     async with async_playwright() as p:
@@ -46,6 +49,9 @@ async def start(thread_name, wait_time, meetingcode, passcode):
             await asyncio.sleep(10)
             await mic_button_locator.evaluate_handle('node => node.click()')
             print(f"{thread_name} mic aayenge.")
+            
+            # Signal that the microphone button is pressed
+            microphone_pressed.set()
         except Exception as e:
             print(f"{thread_name} mic nahe aayenge. ", e)
 
@@ -72,7 +78,13 @@ async def main():
         user = indian_names.get_full_name()
         task = start(f'[Thread{i}]', wait_time, meetingcode, passcode)
         tasks.append(task)
-        await asyncio.gather(*tasks)
+
+        # Wait for the microphone button to be pressed before starting the next thread
+        await microphone_pressed.wait()
+        microphone_pressed.clear()
+
+    # Wait for all tasks to complete
+    await asyncio.gather(*tasks)
 
 if __name__ == '__main__':
     try:
