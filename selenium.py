@@ -12,7 +12,7 @@ async def start(thread_name, wait_time, meetingcode, passcode):
 
     browser = await launch(
         headless=True,
-        executablePath='/path/to/your/browser',  # Specify the correct browser executable path
+        executablePath='/usr/bin/brave-browser',  # Specify the correct browser executable path
         args=['--no-sandbox', '--disable-dev-shm-usage']
     )
     page = await browser.newPage()
