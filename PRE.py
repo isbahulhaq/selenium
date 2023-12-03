@@ -23,3 +23,12 @@ subprocess.run(['apt', 'update'])
 
 # Install Brave browser
 subprocess.run(['apt', 'install', 'brave-browser'])
+
+# Install playwright
+subprocess.run(['pip', 'install', 'playwright'])
+
+# Install Playwright dependencies
+subprocess.run(['playwright', 'install'])
+
+# Install indian_names
+subprocess.run(['pip', 'install', 'indian_names'])
