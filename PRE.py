@@ -1,34 +1,100 @@
-import subprocess
+import time
+import warnings
+from selenium import webdriver
+from selenium_stealth import stealth
+import indian_names
+from joblib import Parallel, delayed
+import requests
 
-# Install wget
-subprocess.run(['apt', 'install', 'wget', '-y'])
+warnings.filterwarnings('ignore')
+MUTEX = None
 
-# Install webdriver_manager
-subprocess.run(['pip', 'install', 'webdriver_manager'])
+def sync_print(text):
+    global MUTEX
+    with MUTEX:
+        print(text)
 
-# Upgrade webdriver_manager
-subprocess.run(['pip', 'install', '--upgrade', 'webdriver_manager'])
+def get_driver():
+    options = webdriver.ChromeOptions()
+    options.headless = True
+    options.add_experimental_option('w3c', True)
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--disable-extensions')
+    options.binary_location = '/usr/bin/brave-browser'
+    options.add_argument(f'--marionette-port=2828')  # Specify the port number here
+    
+    # Apply selenium-stealth to mimic a real browser
+    driver = webdriver.Chrome(options=options)
+    stealth(driver,
+            languages=["en-US", "en"],
+            vendor="Google Inc.",
+            platform="Win32",
+            webgl_vendor="Intel Inc.",
+            renderer="Intel Iris OpenGL Engine",
+            fix_hairline=True,
+            )
+    
+    return driver
 
-# Install curl
-subprocess.run(['apt', 'install', 'curl'])
+def start(name, proxy, user, wait_time):
+    sync_print(f"{name} started!")
+    driver = get_driver()  # Create a new driver instance for each job
+    driver.get(f'https://zoom.us/wc/join/{meetingcode}')
+    time.sleep(10)
+    
+    # Simulate a GET request using requests (replace with your actual URL)
+    url = f'https://zoom.us/wc/join/{meetingcode}'
+    response = requests.get(url)
 
-# Download Brave browser archive keyring
-subprocess.run(['curl', '-fsSLo', '/usr/share/keyrings/brave-browser-archive-keyring.gpg', 'https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg'])
+    time.sleep(1)
+    inp = driver.find_element('xpath', '//input[@type="text"]')
+    inp.send_keys(f"{user}")
+    time.sleep(5)
 
-# Add Brave browser repository to sources.list.d
-subprocess.run(['echo', 'deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg] https://brave-browser-apt-release.s3.brave.com/ stable main', '|', 'sudo', 'tee', '/etc/apt/sources.list.d/brave-browser-release.list'])
+    inp2 = driver.find_element('xpath', '//input[@type="password"]')
+    inp2.send_keys(passcode)
 
-# Update apt
-subprocess.run(['apt', 'update'])
+    # Click the "Join" button using JavaScript
+    join_button = driver.find_element('xpath', '//button[contains(@class,"preview-join-button")]')
+    driver.execute_script("arguments[0].click();", join_button)
 
-# Install Brave browser
-subprocess.run(['apt', 'install', 'brave-browser'])
+    sync_print(f"{name} sleep for {wait_time} seconds ...")
+    time.sleep(wait_time)
+    sync_print(f"{name} ended!")
+    driver.quit()  # Quit the driver after the job has completed
 
-# Install playwright
-subprocess.run(['pip', 'install', 'playwright'])
+def main():
+    global MUTEX
+    wait_time = sec * 60
+    workers = []
 
-# Install Playwright dependencies
-subprocess.run(['playwright', 'install'])
+    for i in range(number):
+        try:
+            proxy = proxylist[i]
+        except Exception:
+            proxy = None
+        try:
+            user = indian_names.get_full_name()
+        except IndexError:
+            break
+        wk = delayed(start)(f'[Thread{i}]', proxy, user, wait_time)
+        workers.append(wk)
 
-# Install indian_names
-subprocess.run(['pip', 'install', 'indian_names'])
+    # Initialize MUTEX before Parallel execution
+    with joblib.parallel_backend("threading", n_jobs=-1):
+        global MUTEX
+        MUTEX = joblib.parallel.Parallel()._effective_joblib_backend(MUTEX)
+
+    Parallel(n_jobs=-1)(workers)
+
+if __name__ == '__main__':
+    number = int(input("Enter number of Users: "))
+    meetingcode = input("Enter meeting code (No Space): ")
+    passcode = input("Enter Password (No Space): ")
+    sec = 60
+    try:
+        main()
+    except:
+        pass
