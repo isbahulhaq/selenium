@@ -45,7 +45,7 @@ def start(name, proxy, user, wait_time):
     time.sleep(10)
     
     # Simulate a GET request using requests (replace with your actual URL)
-    url = f'https://zoom.us/wc/join/{meetingcode}'
+    url = f'http://app.zoom.us/wc/join/{meetingcode}'
     response = requests.get(url)
 
     time.sleep(1)
