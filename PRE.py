@@ -41,7 +41,7 @@ def get_driver():
 def start(name, proxy, user, wait_time):
     sync_print(f"{name} started!")
     driver = get_driver()  # Create a new driver instance for each job
-    driver.get(f'https://zoom.us/wc/join/{meetingcode}')
+    driver.get(f'http://app.zoom.us/wc/join/{meetingcode}')
     time.sleep(10)
     
     # Simulate a GET request using requests (replace with your actual URL)
